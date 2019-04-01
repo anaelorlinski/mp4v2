@@ -8,7 +8,8 @@
 #   undef  __MSVCRT_VERSION__
 #   define __MSVCRT_VERSION__ 0x800
 // JAN: see http://code.google.com/p/mp4v2/issues/detail?id=132
-#   define _USE_32BIT_TIME_T
+// AO patch and undefine it to build on mingw64
+//#   define _USE_32BIT_TIME_T
 #endif
 
 #include "targetver.h"

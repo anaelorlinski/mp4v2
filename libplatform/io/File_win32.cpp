@@ -37,8 +37,7 @@ public:
     bool read( void* buffer, Size size, Size& nin, Size maxChunkSize );
     bool write( const void* buffer, Size size, Size& nout, Size maxChunkSize );
     bool close();
-
-    int64_t getSize();
+    bool getSize( Size& nout );
 
 private:
     HANDLE _handle;
@@ -247,11 +246,24 @@ StandardFileProvider::close()
     return !retval;
 }
 
-int64_t StandardFileProvider::getSize()
+/**
+ * Get the size of a the file in bytes
+ *
+ * @param nout populated with the size of the file in
+ * bytes if the function succeeds
+ *
+ * @retval false successfully got the file size
+ * @retval true error getting the file size
+ */
+bool
+StandardFileProvider::getSize( Size& nout )
 {
-   int64_t retSize = 0;
-   FileSystem::getFileSize( _name, retSize );
-   return retSize;
+    BOOL retval;
+
+    // getFileSize will log if it fails
+    retval = FileSystem::getFileSize( _name, nout );
+
+    return retval;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

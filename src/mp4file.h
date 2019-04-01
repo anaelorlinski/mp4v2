@@ -76,6 +76,7 @@ public:
 
     void Create( const char* fileName,
                  uint32_t    flags,
+                 const MP4FileProvider* provider = NULL,
                  int         add_ftyp = 1,
                  int         add_iods = 1,
                  char*       majorBrand = NULL,
@@ -863,6 +864,11 @@ public:
     {
        m_shouldParseAtomCallback = cb;
     }
+    
+    // logger methods
+    mp4v2::impl::MP4Log &getLogger();
+	
+    MP4Atom* GetRootAtom() { return m_pRootAtom; }
 
 protected:
     void Init();
@@ -1000,6 +1006,8 @@ protected:
 
     ShouldParseAtomCallback m_shouldParseAtomCallback;
 
+    // logging
+    MP4Log m_logger;
  private:
     MP4File ( const MP4File &src );
     MP4File &operator= ( const MP4File &src );

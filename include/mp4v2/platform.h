@@ -26,17 +26,18 @@
     //#endif
 #endif
 
-#if defined( _WIN32 ) || defined( __MINGW32__ )
-#   if defined( MP4V2_EXPORTS )
-#       define MP4V2_EXPORT __declspec(dllexport)
-#   elif defined( MP4V2_USE_DLL_IMPORT ) || !defined( MP4V2_USE_STATIC_LIB )
-#       define MP4V2_EXPORT __declspec(dllimport)
-#   else
+//AO : static build no need for exports
+//#if defined( _WIN32 ) || defined( __MINGW32__ )
+//#   if defined( MP4V2_EXPORTS )
+//#       define MP4V2_EXPORT __declspec(dllexport)
+//#   elif defined( MP4V2_USE_DLL_IMPORT ) || !defined( MP4V2_USE_STATIC_LIB )
+//#       define MP4V2_EXPORT __declspec(dllimport)
+//#   else
 #       define MP4V2_EXPORT
-#   endif
-#else
-#   define MP4V2_EXPORT __attribute__((visibility("default")))
-#endif
+//#   endif
+//#else
+//#   define MP4V2_EXPORT __attribute__((visibility("default")))
+//#endif
 
 #if defined( __GNUC__ )
 #   define MP4V2_DEPRECATED __attribute__((deprecated))

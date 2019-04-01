@@ -16,6 +16,12 @@ bool MP4HaveAtom(
     const char*   atomName );
 
 MP4V2_EXPORT
+bool MP4DeleteAtom(
+    MP4FileHandle hFile,
+    const char*   atomName );
+
+
+MP4V2_EXPORT
 bool MP4GetIntegerProperty(
     MP4FileHandle hFile,
     const char*   propName,

@@ -18,6 +18,12 @@ bool MP4HaveTrackAtom(
 
 
 MP4V2_EXPORT
+bool MP4DeleteTrackAtom(
+    MP4FileHandle hFile,
+    MP4TrackId    trackId,
+    const char*   atomname );
+
+MP4V2_EXPORT
 bool MP4GetTrackAtomData (
    MP4FileHandle hFile, 
    MP4TrackId trackId, 

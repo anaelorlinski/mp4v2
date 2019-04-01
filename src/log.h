@@ -32,19 +32,20 @@ namespace mp4v2 { namespace impl {
  * Handle logging either to standard out or to a callback
  * function
  */
-class MP4V2_EXPORT Log {
+class MP4V2_EXPORT MP4Log {
 private:
     MP4LogLevel                 _verbosity;
-    static MP4LogCallback       _cb_func;
-
+    MP4LogCallback              _cb_func;
+    void*                       _cb_ptr;
 public:
     const MP4LogLevel&          verbosity;
 
 public:
-    Log( MP4LogLevel = MP4_LOG_NONE );
-    virtual ~Log();
+    MP4Log( MP4LogLevel = MP4_LOG_NONE );
+    virtual ~MP4Log();
 
-    static void setLogCallback ( MP4LogCallback );
+    void setLogCallback ( MP4LogCallback );
+    void setLogPtr ( void* );
 
     void setVerbosity   ( MP4LogLevel );
 
@@ -76,8 +77,8 @@ public:
     void errorf ( const Exception&      x );
 
 private:
-    Log ( const Log &src );
-    Log &operator= ( const Log &src );
+    MP4Log ( const MP4Log &src );
+    MP4Log &operator= ( const MP4Log &src );
 };
 
 /**
@@ -85,7 +86,8 @@ private:
  * needs to log something but doesn't otherwise have access
  * to one
  */
-extern Log log;
+// AO : replaced by instance in MP4File class. Keep global one in case cannot be replaced easily.
+extern MP4Log log;
 ///////////////////////////////////////////////////////////////////////////////
 
 }} // namespace mp4v2::impl

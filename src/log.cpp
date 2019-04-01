@@ -27,20 +27,18 @@
 
 namespace mp4v2 { namespace impl {
 
-MP4LogCallback Log::_cb_func = NULL;
-
 // There's no mechanism to set the log level at runtime at
 // the moment so construct this so it only logs important
 // stuff.
-Log log(MP4_LOG_WARNING);
+MP4Log log(MP4_LOG_WARNING);
 
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
  * Log class constructor
  */
-Log::Log( MP4LogLevel verbosity_ /* = MP4_LOG_NONE */ )
-    : _verbosity ( verbosity_ )
+MP4Log::MP4Log( MP4LogLevel verbosity_ /* = MP4_LOG_NONE */ )
+    : _verbosity ( verbosity_ ),  _cb_func(NULL), _cb_ptr(NULL)
     , verbosity  ( _verbosity )
 {
 }
@@ -50,7 +48,7 @@ Log::Log( MP4LogLevel verbosity_ /* = MP4_LOG_NONE */ )
 /**
  * Log class destructor
  */
-Log::~Log()
+MP4Log::~MP4Log()
 {
 }
 
@@ -62,10 +60,16 @@ Log::~Log()
  * @param value the function to call
  */
 void
-Log::setLogCallback( MP4LogCallback value )
+MP4Log::setLogCallback( MP4LogCallback value )
 {
-    Log::_cb_func = value;
+    _cb_func = value;
 }
+
+void MP4Log::setLogPtr( void* ptr )
+{
+    _cb_ptr = ptr;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -75,7 +79,7 @@ Log::setLogCallback( MP4LogCallback value )
  * @param value the verbosity to use
  */
 void
-Log::setVerbosity( MP4LogLevel value )
+MP4Log::setVerbosity( MP4LogLevel value )
 {
     _verbosity = value;
 }
@@ -90,7 +94,7 @@ Log::setVerbosity( MP4LogLevel value )
  * newline.
  */
 void
-Log::errorf( const char* format,
+MP4Log::errorf( const char* format,
              ... )
 {
     va_list     ap;
@@ -110,7 +114,7 @@ Log::errorf( const char* format,
  * newline.
  */
 void
-Log::warningf( const char* format,
+MP4Log::warningf( const char* format,
                ... )
 {
     va_list     ap;
@@ -130,7 +134,7 @@ Log::warningf( const char* format,
  * newline.
  */
 void
-Log::infof( const char* format,
+MP4Log::infof( const char* format,
             ... )
 {
     va_list     ap;
@@ -148,7 +152,7 @@ Log::infof( const char* format,
  * newline.
  */
 void
-Log::verbose1f( const char* format,
+MP4Log::verbose1f( const char* format,
                 ... )
 {
     va_list     ap;
@@ -168,7 +172,7 @@ Log::verbose1f( const char* format,
  * newline.
  */
 void
-Log::verbose2f( const char* format,
+MP4Log::verbose2f( const char* format,
                 ... )
 {
     va_list     ap;
@@ -188,7 +192,7 @@ Log::verbose2f( const char* format,
  * newline.
  */
 void
-Log::verbose3f( const char* format,
+MP4Log::verbose3f( const char* format,
                 ... )
 {
     va_list     ap;
@@ -208,7 +212,7 @@ Log::verbose3f( const char* format,
  * newline.
  */
 void
-Log::verbose4f( const char* format,
+MP4Log::verbose4f( const char* format,
                 ... )
 {
     va_list     ap;
@@ -232,7 +236,7 @@ Log::verbose4f( const char* format,
  * newline.
  */
 void
-Log::dump ( uint8_t       indent,
+MP4Log::dump ( uint8_t       indent,
             MP4LogLevel   verbosity_,
             const char*   format, ... )
 {
@@ -260,7 +264,7 @@ Log::dump ( uint8_t       indent,
  * @param ap varargs to build the message
  */
 void
-Log::vdump( uint8_t     indent,
+MP4Log::vdump( uint8_t     indent,
             MP4LogLevel verbosity_,
             const char* format,
             va_list     ap )
@@ -278,7 +282,7 @@ Log::vdump( uint8_t     indent,
         return;
     }
 
-    if (Log::_cb_func)
+    if (_cb_func)
     {
         ostringstream   new_format;
 
@@ -288,11 +292,11 @@ Log::vdump( uint8_t     indent,
             // new_format << setw(indent) << setfill(' ') << "" << setw(0);
             // new_format << format;
             new_format << indent_str << format;
-            Log::_cb_func(verbosity_,new_format.str().c_str(),ap);
+            _cb_func(_cb_ptr, verbosity_,new_format.str().c_str(),ap);
             return;
         }
 
-        Log::_cb_func(verbosity_,format,ap);
+        _cb_func(_cb_ptr, verbosity_,format,ap);
         return;
     }
 
@@ -317,7 +321,7 @@ Log::vdump( uint8_t     indent,
  * newline.
  */
 void
-Log::printf( MP4LogLevel        verbosity,
+MP4Log::printf( MP4LogLevel        verbosity,
              const char*        format,
              ... )
 {
@@ -343,7 +347,7 @@ Log::printf( MP4LogLevel        verbosity,
  * @param ap varargs to build the message
  */
 void
-Log::vprintf( MP4LogLevel       verbosity_,
+MP4Log::vprintf( MP4LogLevel       verbosity_,
               const char*       format,
               va_list           ap )
 {
@@ -359,9 +363,9 @@ Log::vprintf( MP4LogLevel       verbosity_,
         return;
     }
 
-    if (Log::_cb_func)
+    if (_cb_func)
     {
-        Log::_cb_func(verbosity_,format,ap);
+        _cb_func(_cb_ptr,verbosity_,format,ap);
         return;
     }
 
@@ -391,7 +395,7 @@ Log::vprintf( MP4LogLevel       verbosity_,
  * it to the log callback or stdout.
  */
 void
-Log::hexDump( uint8_t           indent,
+MP4Log::hexDump( uint8_t           indent,
               MP4LogLevel       verbosity_,
               const uint8_t*    pBytes,
               uint32_t          numBytes,
@@ -493,7 +497,7 @@ Log::hexDump( uint8_t           indent,
  * @param x the exception to log
  */
 void
-Log::errorf ( const Exception&      x )
+MP4Log::errorf ( const Exception&      x )
 {
     this->printf(MP4_LOG_ERROR,"%s",x.msg().c_str());
 }
@@ -507,7 +511,7 @@ using namespace mp4v2::impl;
 extern "C"
 void MP4SetLogCallback( MP4LogCallback cb_func )
 {
-    Log::setLogCallback(cb_func);
+    mp4v2::impl::log.setLogCallback(cb_func);
 }
 
 extern "C"

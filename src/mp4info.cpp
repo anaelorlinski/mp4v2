@@ -611,7 +611,7 @@ char* MP4FileInfo(
     const char* fileName,
     MP4TrackId  trackId )
 {
-    MP4FileHandle mp4File = MP4Read(fileName);
+    MP4FileHandle mp4File = MP4Read(fileName, NULL, NULL);
 
     if (!mp4File) {
         return NULL;

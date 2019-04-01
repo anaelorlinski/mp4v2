@@ -14,8 +14,7 @@ public:
     bool read( void* buffer, Size size, Size& nin, Size maxChunkSize );
     bool write( const void* buffer, Size size, Size& nout, Size maxChunkSize );
     bool close();
-
-    int64_t getSize();
+    bool getSize(Size& nout);
 
 private:
     bool         _seekg;
@@ -100,11 +99,15 @@ StandardFileProvider::close()
     return _fstream.fail();
 }
 
-int64_t StandardFileProvider::getSize()
+bool
+StandardFileProvider::getSize( Size& nout )
 {
-   int64_t retSize = 0;
-   FileSystem::getFileSize( _name, retSize );
-   return retSize;
+    bool retval;
+
+    // getFileSize will log if it fails
+    retval = FileSystem::getFileSize( _name, nout );
+
+    return retval;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

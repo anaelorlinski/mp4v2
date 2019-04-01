@@ -30,6 +30,7 @@ typedef enum {
 /*****************************************************************************/
 
 typedef void (*MP4LogCallback)(
+    void* ptr,
     MP4LogLevel loglevel,
     const char* fmt,
     va_list     ap );

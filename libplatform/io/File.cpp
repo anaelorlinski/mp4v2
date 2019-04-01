@@ -63,7 +63,8 @@ File::open( std::string name_, Mode mode_ )
     if( _provider.open( _name, _mode ))
         return true;
 
-    _size = _provider.getSize();
+    if (_provider.getSize( _size))
+        return true;
     //FileSystem::getFileSize( _name, _size );
 
     _isOpen = true;
@@ -130,11 +131,13 @@ File::close()
     return false;
 }
 
-int64_t File::getSize()
+bool
+File::getSize( Size& nout )
 {
-   int64_t retSize = 0;
-   FileSystem::getFileSize( _name, retSize );
-   return retSize;
+    if( !_isOpen )
+        return false;
+
+    return _provider.getSize( nout );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -188,10 +191,10 @@ CustomFileProvider::close()
     return _call.close( _handle );
 }
 
-int64_t CustomFileProvider::getSize()
+bool CustomFileProvider::getSize( Size& nout )
 {
-   assert( _call.size );
-   return _call.size( _handle );
+   assert( _call.getSize );
+   return _call.getSize( _handle, &nout );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
