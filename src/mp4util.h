@@ -39,10 +39,14 @@ namespace mp4v2 { namespace impl {
 
 #ifdef NDEBUG
 #   define WARNING(expr) \
-        log.errorf("Warning: %s", LIBMPV42_STRINGIFY(expr));
+        GetLogger().errorf("Warning: %s", LIBMPV42_STRINGIFY(expr));
+#   define WARNING_TARGET(target, expr) \
+        target.errorf("Warning: %s", LIBMPV42_STRINGIFY(expr));
 #else
 #   define WARNING(expr) \
-        log.errorf("Warning (%s) in %s at line %u", LIBMPV42_STRINGIFY(expr), __FILE__, __LINE__);
+        GetLogger().errorf("Warning (%s) in %s at line %u", LIBMPV42_STRINGIFY(expr), __FILE__, __LINE__);
+#   define WARNING_TARGET(target, expr) \
+        target.errorf("Warning (%s) in %s at line %u", LIBMPV42_STRINGIFY(expr), __FILE__, __LINE__);
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -27,7 +27,7 @@
 #ifdef DLL_EXPORT
 # define MP4V2_EXPORTS
 #else
-# define MP4V2_USE_STATIC_LIB
+# define MP4V2_USE_STATIC_LIB 1
 #endif
 
 /* Define to 1 if LFS should be activated */

@@ -33,6 +33,8 @@
 #ifndef MP4V2_IMPL_MP4FILE_H
 #define MP4V2_IMPL_MP4FILE_H
 
+#include "log.h"
+
 namespace mp4v2 { namespace impl {
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -69,6 +71,8 @@ public:
 public:
     MP4File();
     ~MP4File();
+
+    Log& GetLogger();
 
     ///////////////////////////////////////////////////////////////////////////
     // file ops
@@ -161,6 +165,9 @@ public:
 
     /* track properties */
     MP4Atom *FindTrackAtom(MP4TrackId trackId, const char *name);
+
+    bool GetTrackAtomData(MP4TrackId trackId, const char *name, uint8_t ** outAtomData, uint64_t * outDataSize);
+
     uint64_t GetTrackIntegerProperty(
         MP4TrackId trackId, const char* name);
     float GetTrackFloatProperty(
@@ -193,6 +200,7 @@ public:
     /* sample operations */
 
     uint32_t GetSampleSize(MP4TrackId trackId, MP4SampleId sampleId);
+    uint64_t GetSampleFileOffset(MP4TrackId trackId, MP4SampleId sampleId);
 
     uint32_t GetTrackMaxSampleSize(MP4TrackId trackId);
 
@@ -320,6 +328,12 @@ public:
         uint16_t width,
         uint16_t height,
         uint8_t videoType);
+
+    MP4TrackId AddTSC2VideoTrack(
+        uint32_t timeScale,
+        MP4Duration sampleDuration,
+        uint16_t width,
+        uint16_t height);
 
     MP4TrackId AddEncVideoTrack( // ismacryp
         uint32_t timeScale,
@@ -869,6 +883,7 @@ public:
         MP4Atom* pAncestorAtom,
         const char* childName);
 
+    MP4Atom* GetRootAtom() { return m_pRootAtom; }
 protected:
     void Init();
 
@@ -1008,6 +1023,9 @@ protected:
 
     char m_trakName[1024];
     char m_editName[1024];
+
+    // logger
+    Log m_logger;
 
  private:
     MP4File ( const MP4File &src );

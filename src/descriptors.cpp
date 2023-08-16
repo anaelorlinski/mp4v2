@@ -70,7 +70,7 @@ MP4BaseDescriptor::MP4BaseDescriptor (MP4Atom& parentAtom, uint8_t tag) : MP4Des
             new MP4Integer8Property(parentAtom, "MPEGJProfileLevelIndication"));
         break;
     default:
-        log.errorf("%s: \"%s\": error in base descriptor - tag %u", __FUNCTION__,
+        m_parentAtom.GetLogger().errorf("%s: \"%s\": error in base descriptor - tag %u", __FUNCTION__,
                    m_parentAtom.GetFile().GetFilename().c_str(), tag);
         break;
 
@@ -111,7 +111,7 @@ MP4BytesDescriptor::MP4BytesDescriptor (MP4Atom& parentAtom, uint8_t tag) : MP4D
             m_bytes_index = 1;
             break;
         default:
-            log.errorf("%s: \"%s\": error in bytes descriptor - tag %u", __FUNCTION__,
+            m_parentAtom.GetLogger().errorf("%s: \"%s\": error in bytes descriptor - tag %u", __FUNCTION__,
                        m_parentAtom.GetFile().GetFilename().c_str(), tag);
             break;
         }
@@ -507,7 +507,7 @@ void MP4ContentIdDescriptor::Read(MP4File& file)
     /* if compatiblity != 0 */
     if (((MP4Integer8Property*)m_pProperties[0])->GetValue() != 0) {
         /* we don't understand it */
-        log.verbose1f("incompatible content id descriptor");
+        file.GetLogger().verbose1f("incompatible content id descriptor");
         return;
     }
 

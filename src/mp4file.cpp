@@ -95,6 +95,10 @@ MP4File::GetFilename() const
     return m_file->name;
 }
 
+Log& MP4File::GetLogger() {
+    return m_logger;
+}
+
 void MP4File::Read( const char* fileName, const MP4FileProvider* provider, const MP4IOCallbacks* callbacks, void* handle )
 {
     Open( fileName, File::MODE_READ, provider, callbacks, handle );
@@ -178,7 +182,7 @@ bool MP4File::Modify( const char*           fileName,
 
     if (pMoovAtom == NULL) {
         // there isn't one, odd but we can still proceed
-        log.warningf("%s: \"%s\": no moov atom, can't modify",
+        m_logger.warningf("%s: \"%s\": no moov atom, can't modify",
                      __FUNCTION__, GetFilename().c_str());
         return false;
         //pMoovAtom = AddChildAtom(m_pRootAtom, "moov");
@@ -503,7 +507,7 @@ void MP4File::GenerateTracks()
                 m_pTracks.Add(pTrack);
             }
             catch( Exception* x ) {
-                log.errorf(*x);
+                m_logger.errorf(*x);
                 delete x;
             }
 
@@ -512,7 +516,7 @@ void MP4File::GenerateTracks()
                 if (m_odTrackId == MP4_INVALID_TRACK_ID) {
                     m_odTrackId = pTrackIdProperty->GetValue();
                 } else {
-                    log.warningf("%s: \"%s\": multiple OD tracks present",
+                    m_logger.warningf("%s: \"%s\": multiple OD tracks present",
                                  __FUNCTION__, GetFilename().c_str() );
                 }
             }
@@ -701,7 +705,7 @@ void MP4File::UpdateDuration(MP4Duration duration)
 
 void MP4File::Dump( bool dumpImplicits )
 {
-    log.dump(0, MP4_LOG_VERBOSE1, "\"%s\": Dumping meta-information...", m_file->name.c_str() );
+    m_logger.dump(0, MP4_LOG_VERBOSE1, "\"%s\": Dumping meta-information...", m_file->name.c_str() );
     m_pRootAtom->Dump( 0, dumpImplicits);
 }
 
@@ -1045,7 +1049,7 @@ MP4TrackId MP4File::AddTrack(const char* type, uint32_t timeScale)
 
     // sanity check for user defined types
     if (strlen(normType) > 4) {
-        log.warningf("%s: \"%s\": type truncated to four characters",
+        m_logger.warningf("%s: \"%s\": type truncated to four characters",
                      __FUNCTION__, GetFilename().c_str());
         // StringProperty::SetValue() will do the actual truncation
     }
@@ -1840,6 +1844,28 @@ MP4TrackId MP4File::AddMP4VideoTrack(
     return trackId;
 }
 
+MP4TrackId MP4File::AddTSC2VideoTrack(
+    uint32_t timeScale,
+    MP4Duration sampleDuration,
+    uint16_t width,
+    uint16_t height)
+{
+    MP4TrackId trackId = AddVideoTrackDefault(timeScale,
+                         sampleDuration,
+                         width,
+                         height,
+                         "tsc2");
+
+    SetTrackIntegerProperty(trackId, "mdia.minf.stbl.stsd.tsc2.width", width);
+    SetTrackIntegerProperty(trackId, "mdia.minf.stbl.stsd.tsc2.height", height);
+    SetTrackIntegerProperty(trackId, "mdia.minf.stbl.stsd.tsc2.esds.ESID", 0 );
+
+    uint8_t videoType = MP4_PRIVATE_VIDEO_TYPE;
+    SetTrackIntegerProperty(trackId, "mdia.minf.stbl.stsd.tsc2.esds.decConfigDescr.objectTypeId", videoType);
+    SetTrackIntegerProperty(trackId, "mdia.minf.stbl.stsd.tsc2.esds.decConfigDescr.streamType", MP4VisualStreamType);
+    return trackId;
+}
+
 // ismacrypted
 MP4TrackId MP4File::AddEncVideoTrack(uint32_t timeScale,
                                      MP4Duration sampleDuration,
@@ -2051,7 +2077,7 @@ void MP4File::AddH264SequenceParameterSet (MP4TrackId trackId,
                                     (MP4Property **)&pLength) == false) ||
             (avcCAtom->FindProperty("avcC.sequenceEntries.sequenceParameterSetNALUnit",
                                     (MP4Property **)&pUnit) == false)) {
-        log.errorf("%s: \"%s\": Could not find avcC properties",
+        m_logger.errorf("%s: \"%s\": Could not find avcC properties",
                    __FUNCTION__, GetFilename().c_str() );
         return;
     }
@@ -2094,7 +2120,7 @@ void MP4File::AddH264PictureParameterSet (MP4TrackId trackId,
                                     (MP4Property **)&pLength) == false) ||
             (avcCAtom->FindProperty("avcC.pictureEntries.pictureParameterSetNALUnit",
                                     (MP4Property **)&pUnit) == false)) {
-        log.errorf("%s: \"%s\": Could not find avcC picture table properties",
+        m_logger.errorf("%s: \"%s\": Could not find avcC picture table properties",
                    __FUNCTION__, GetFilename().c_str());
         return;
     }
@@ -2110,7 +2136,7 @@ void MP4File::AddH264PictureParameterSet (MP4TrackId trackId,
                 uint32_t seqlen;
                 pUnit->GetValue(&seq, &seqlen, index);
                 if (memcmp(seq, pPict, pictLen) == 0) {
-                    log.verbose1f("\"%s\": picture matches %d", 
+                    m_logger.verbose1f("\"%s\": picture matches %d",
                                   GetFilename().c_str(), index);
                     free(seq);
                     return;
@@ -2122,7 +2148,7 @@ void MP4File::AddH264PictureParameterSet (MP4TrackId trackId,
     pLength->AddValue(pictLen);
     pUnit->AddValue(pPict, pictLen);
     pCount->IncrementValue();
-    log.verbose1f("\"%s\": new picture added %d", GetFilename().c_str(),
+    m_logger.verbose1f("\"%s\": new picture added %d", GetFilename().c_str(),
                   pCount->GetValue());
 
     return;
@@ -2691,7 +2717,7 @@ MP4ChapterType MP4File::GetChapters(MP4Chapter_t ** chapterList, uint32_t * chap
         MP4Integer32Property * pCounter = 0;
         if (!pChpl->FindProperty("chpl.chaptercount", (MP4Property **)&pCounter))
         {
-            log.warningf("%s: \"%s\": Nero chapter count does not exist",
+            m_logger.warningf("%s: \"%s\": Nero chapter count does not exist",
                          __FUNCTION__, GetFilename().c_str());
             return MP4ChapterTypeNone;
         }
@@ -2699,7 +2725,7 @@ MP4ChapterType MP4File::GetChapters(MP4Chapter_t ** chapterList, uint32_t * chap
         uint32_t counter = pCounter->GetValue();
         if (0 == counter)
         {
-            log.warningf("%s: \"%s\": No Nero chapters available",
+            m_logger.warningf("%s: \"%s\": No Nero chapters available",
                          __FUNCTION__, GetFilename().c_str());
             return MP4ChapterTypeNone;
         }
@@ -2712,20 +2738,20 @@ MP4ChapterType MP4File::GetChapters(MP4Chapter_t ** chapterList, uint32_t * chap
 
         if (!pChpl->FindProperty("chpl.chapters", (MP4Property **)&pTable))
         {
-            log.warningf("%s: \"%s\": Nero chapter list does not exist",
+            m_logger.warningf("%s: \"%s\": Nero chapter list does not exist",
                          __FUNCTION__, GetFilename().c_str());
             return MP4ChapterTypeNone;
         }
 
         if (0 == (pStartTime = (MP4Integer64Property *) pTable->GetProperty(0)))
         {
-            log.warningf("%s: \"%s\": List of Chapter starttimes does not exist",
+            m_logger.warningf("%s: \"%s\": List of Chapter starttimes does not exist",
                          __FUNCTION__, GetFilename().c_str());
             return MP4ChapterTypeNone;
         }
         if (0 == (pName = (MP4StringProperty *) pTable->GetProperty(1)))
         {
-            log.warningf("%s: \"%s\": List of Chapter titles does not exist",
+            m_logger.warningf("%s: \"%s\": List of Chapter titles does not exist",
                          __FUNCTION__, GetFilename().c_str());
             return MP4ChapterTypeNone;
         }
@@ -2855,7 +2881,7 @@ MP4ChapterType MP4File::ConvertChapters(MP4ChapterType toChapterType)
     GetChapters(&chapters, &chapterCount, sourceType);
     if (0 == chapterCount)
     {
-        log.warningf("%s: \"%s\": %s", __FUNCTION__, GetFilename().c_str(),
+        m_logger.warningf("%s: \"%s\": %s", __FUNCTION__, GetFilename().c_str(),
                      errMsg);
         return MP4ChapterTypeNone;
     }
@@ -3062,6 +3088,11 @@ uint32_t MP4File::GetSampleSize(MP4TrackId trackId, MP4SampleId sampleId)
     return m_pTracks[FindTrackIndex(trackId)]->GetSampleSize(sampleId);
 }
 
+uint64_t MP4File::GetSampleFileOffset(MP4TrackId trackId, MP4SampleId sampleId)
+{
+    return m_pTracks[FindTrackIndex(trackId)]->GetSampleFileOffset(sampleId);
+}
+
 uint32_t MP4File::GetTrackMaxSampleSize(MP4TrackId trackId)
 {
     return m_pTracks[FindTrackIndex(trackId)]->GetMaxSampleSize();
@@ -3207,6 +3238,23 @@ char* MP4File::MakeTrackName(MP4TrackId trackId, const char* name)
 MP4Atom *MP4File::FindTrackAtom (MP4TrackId trackId, const char *name)
 {
     return FindAtom(MakeTrackName(trackId, name));
+}
+
+bool MP4File::GetTrackAtomData(MP4TrackId trackId, const char *name, uint8_t ** outAtomData, uint64_t * outDataSize)
+{
+   MP4Atom * pAtom = FindTrackAtom(trackId, name);
+   if ( pAtom == NULL )
+      return false;
+
+   // Need to offset past the header (4 bytes for size and 4 bytes for atom type)
+   SetPosition(pAtom->GetStart() + 4 + 4);
+
+   uint64_t atomSize = pAtom->GetSize();
+   uint8_t * data = (uint8_t *)malloc(atomSize);
+   ReadBytes( data, atomSize );
+   *outAtomData = data;
+   *outDataSize = atomSize;
+   return true;
 }
 
 uint64_t MP4File::GetTrackIntegerProperty(MP4TrackId trackId, const char* name)
@@ -3528,7 +3576,7 @@ const char *MP4File::GetTrackMediaDataName (MP4TrackId trackId)
        return NULL;
 
     if (pAtom->GetNumberOfChildAtoms() != 1) {
-        log.errorf("%s: \"%s\": track %d has more than 1 child atoms in stsd", 
+        m_logger.errorf("%s: \"%s\": track %d has more than 1 child atoms in stsd",
                    __FUNCTION__, GetFilename().c_str(), trackId);
         return NULL;
     }
@@ -3756,7 +3804,7 @@ void MP4File::GetTrackH264SeqPictHeaders (MP4TrackId trackId,
                                     (MP4Property **)&pSeqLen) == false) ||
             (avcCAtom->FindProperty("avcC.sequenceEntries.sequenceParameterSetNALUnit",
                                     (MP4Property **)&pSeqVal) == false)) {
-        log.errorf("%s: \"%s\": Could not find avcC properties", __FUNCTION__, GetFilename().c_str());
+        m_logger.errorf("%s: \"%s\": Could not find avcC properties", __FUNCTION__, GetFilename().c_str());
         return ;
     }
     uint8_t **ppSeqHeader =
@@ -3783,7 +3831,7 @@ void MP4File::GetTrackH264SeqPictHeaders (MP4TrackId trackId,
                                     (MP4Property **)&pPictLen) == false) ||
             (avcCAtom->FindProperty("avcC.pictureEntries.pictureParameterSetNALUnit",
                                     (MP4Property **)&pPictVal) == false)) {
-        log.errorf("%s: \"%s\": Could not find avcC picture table properties",
+        m_logger.errorf("%s: \"%s\": Could not find avcC picture table properties",
                    __FUNCTION__, GetFilename().c_str());
         return ;
     }
@@ -4430,7 +4478,7 @@ void MP4File::EncAndCopySample(
 
     //if( ismacrypEncryptSampleAddHeader( ismaCryptSId, numBytes, pBytes, &encSampleLength, &encSampleData ) != 0)
     if( encfcnp( encfcnparam1, numBytes, pBytes, &encSampleLength, &encSampleData ) != 0 )
-        log.errorf("%s(%s,%s) Can't encrypt the sample and add its header %u", 
+        srcFile->GetLogger().errorf("%s(%s,%s) Can't encrypt the sample and add its header %u",
                    __FUNCTION__, srcFile->GetFilename().c_str(), dstFile->GetFilename().c_str(), srcSampleId );
 
     if( hasDependencyFlags ) {

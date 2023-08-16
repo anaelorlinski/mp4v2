@@ -35,8 +35,8 @@ namespace mp4v2 { namespace impl {
 class MP4V2_EXPORT Log {
 private:
     MP4LogLevel                 _verbosity;
-    static MP4LogCallback       _cb_func;
-
+    MP4LogCallback              _cb_func;
+    void*                       _cb_target;
 public:
     const MP4LogLevel&          verbosity;
 
@@ -44,7 +44,8 @@ public:
     Log( MP4LogLevel = MP4_LOG_NONE );
     virtual ~Log();
 
-    static void setLogCallback ( MP4LogCallback );
+    void setLogCallback ( MP4LogCallback );
+    void setConfig ( MP4LogConfig* );
 
     void setVerbosity   ( MP4LogLevel );
 

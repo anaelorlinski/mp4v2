@@ -76,7 +76,7 @@ void MP4RtpAtom::Generate()
         AddPropertiesHntiType();
         GenerateHntiType();
     } else {
-        log.warningf("%s: \"%s\": rtp atom in unexpected context, can not generate",
+        GetLogger().warningf("%s: \"%s\": rtp atom in unexpected context, can not generate",
                      __FUNCTION__, GetFile().GetFilename().c_str() );
     }
 }
@@ -108,7 +108,7 @@ void MP4RtpAtom::Read()
         AddPropertiesHntiType();
         ReadHntiType();
     } else {
-        log.verbose1f("rtp atom in unexpected context, can not read");
+        GetLogger().verbose1f("rtp atom in unexpected context, can not read");
     }
 
     Skip(); // to end of atom

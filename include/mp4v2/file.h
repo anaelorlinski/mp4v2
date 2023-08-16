@@ -484,7 +484,8 @@ bool MP4Optimize(
  */
 MP4V2_EXPORT
 MP4FileHandle MP4Read(
-    const char* fileName );
+    const char* fileName,
+    MP4LogConfig* logConfig DEFAULT(NULL) );
 
 /** Read an existing mp4 file.
  *
@@ -514,7 +515,8 @@ MP4FileHandle MP4Read(
 MP4V2_EXPORT
 MP4FileHandle MP4ReadProvider(
     const char*            fileName,
-    const MP4FileProvider* fileProvider DEFAULT(NULL) );
+    const MP4FileProvider* fileProvider DEFAULT(NULL),
+    MP4LogConfig*          logConfig DEFAULT(NULL) );
 
 /** Read an existing mp4 file using an I/O callbacks structure.
  *
@@ -541,7 +543,8 @@ MP4FileHandle MP4ReadProvider(
 MP4V2_EXPORT
 MP4FileHandle MP4ReadCallbacks(
     const MP4IOCallbacks* callbacks,
-    void*                 handle DEFAULT(NULL) );
+    void*                 handle DEFAULT(NULL),
+    MP4LogConfig*         logConfig DEFAULT(NULL) );
 
 /** @} ***********************************************************************/
 

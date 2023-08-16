@@ -85,7 +85,7 @@ void MP4Descriptor::Read(MP4File& file)
 
 void MP4Descriptor::ReadHeader(MP4File& file)
 {
-    log.verbose1f("\"%s\": ReadDescriptor: pos = 0x%" PRIx64, file.GetFilename().c_str(),
+    file.GetLogger().verbose1f("\"%s\": ReadDescriptor: pos = 0x%" PRIx64, file.GetFilename().c_str(),
                   file.GetPosition());
 
     // read tag and length
@@ -98,7 +98,7 @@ void MP4Descriptor::ReadHeader(MP4File& file)
     m_size = file.ReadMpegLength();
     m_start = file.GetPosition();
 
-    log.verbose1f("\"%s\": ReadDescriptor: tag 0x%02x data size %u (0x%x)",
+    file.GetLogger().verbose1f("\"%s\": ReadDescriptor: tag 0x%02x data size %u (0x%x)",
                   file.GetFilename().c_str(), m_tag, m_size, m_size);
 }
 
@@ -130,12 +130,12 @@ void MP4Descriptor::ReadProperties(MP4File& file,
                     (pProperty->GetType() == TableProperty) ?
                     MP4_LOG_VERBOSE2 : MP4_LOG_VERBOSE1;
 
-                if (log.verbosity >= thisVerbosity) {
-                    // log.printf(thisVerbosity,"Read: ");
+                if (file.GetLogger().verbosity >= thisVerbosity) {
+                    // GetLogger().printf(thisVerbosity,"Read: ");
                     pProperty->Dump(0, true);
                 }
             } else {
-                log.errorf("%s: \"%s\": Overran descriptor, tag %u data size %u property %u",
+                file.GetLogger().errorf("%s: \"%s\": Overran descriptor, tag %u data size %u property %u",
                            __FUNCTION__, file.GetFilename().c_str(), m_tag, m_size, i);
                 throw new EXCEPTION("overran descriptor");
             }
@@ -151,7 +151,7 @@ void MP4Descriptor::Write(MP4File& file)
     uint32_t numProperties = m_pProperties.Size();
 
     if (numProperties == 0) {
-        WARNING(numProperties == 0);
+        WARNING_TARGET(file.GetLogger(), numProperties == 0);
         return;
     }
 
@@ -196,7 +196,7 @@ void MP4Descriptor::Dump(uint8_t indent, bool dumpImplicits)
     uint32_t numProperties = m_pProperties.Size();
 
     if (numProperties == 0) {
-        WARNING(numProperties == 0);
+        WARNING_TARGET(m_parentAtom.GetFile().GetLogger(), numProperties == 0);
         return;
     }
     for (uint32_t i = 0; i < numProperties; i++) {

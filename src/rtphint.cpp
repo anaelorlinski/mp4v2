@@ -245,7 +245,7 @@ void MP4RtpHintTrack::ReadPacket(
         throw;
     }
 
-    log.hexDump(0, MP4_LOG_VERBOSE1, *ppBytes, *pNumBytes,
+    GetLogger().hexDump(0, MP4_LOG_VERBOSE1, *ppBytes, *pNumBytes,
                 "\"%s\": %u ", GetFile().GetFilename().c_str(),
                 packetIndex);
 }
@@ -739,8 +739,8 @@ void MP4RtpHint::Read(MP4File& file)
         pPacket->Read(file);
     }
 
-    if (log.verbosity >= MP4_LOG_VERBOSE1) {
-        log.verbose1f("\"%s\": ReadHint:", GetTrack().GetFile().GetFilename().c_str());
+    if (GetTrack().GetFile().GetLogger().verbosity >= MP4_LOG_VERBOSE1) {
+        GetTrack().GetFile().GetLogger().verbose1f("\"%s\": ReadHint:", GetTrack().GetFile().GetFilename().c_str());
         Dump(10, false);
     }
 }
@@ -777,8 +777,8 @@ void MP4RtpHint::Write(MP4File& file)
 
     file.SetPosition(endPos);
 
-    if (log.verbosity >= MP4_LOG_VERBOSE1) {
-        log.verbose1f("\"%s\": WriteRtpHint:", GetTrack().GetFile().GetFilename().c_str());
+    if (GetTrack().GetFile().GetLogger().verbosity >= MP4_LOG_VERBOSE1) {
+        GetTrack().GetFile().GetLogger().verbose1f("\"%s\": WriteRtpHint:", GetTrack().GetFile().GetFilename().c_str());
         Dump(14, false);
     }
 }
@@ -788,7 +788,7 @@ void MP4RtpHint::Dump(uint8_t indent, bool dumpImplicits)
     MP4Container::Dump(indent, dumpImplicits);
 
     for (uint32_t i = 0; i < m_rtpPackets.Size(); i++) {
-        log.dump(indent, MP4_LOG_VERBOSE1,"\"%s\": RtpPacket: %u",
+        GetTrack().GetFile().GetLogger().dump(indent, MP4_LOG_VERBOSE1,"\"%s\": RtpPacket: %u",
                  GetTrack().GetFile().GetFilename().c_str(), i);
         m_rtpPackets[i]->Dump(indent + 1, dumpImplicits);
     }
@@ -1051,7 +1051,7 @@ void MP4RtpPacket::Dump(uint8_t indent, bool dumpImplicits)
     MP4Container::Dump(indent, dumpImplicits);
 
     for (uint32_t i = 0; i < m_rtpData.Size(); i++) {
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": RtpData: %u",
+        GetHint().GetTrack().GetFile().GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": RtpData: %u",
                  GetHint().GetTrack().GetFile().GetFilename().c_str(), i);
         m_rtpData[i]->Dump(indent + 1, dumpImplicits);
     }

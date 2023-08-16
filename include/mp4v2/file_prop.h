@@ -50,6 +50,11 @@ bool MP4HaveAtom(
     MP4FileHandle hFile,
     const char*   atomName );
 
+MP4V2_EXPORT
+bool MP4DeleteAtom(
+    MP4FileHandle hFile,
+    const char*   atomName );
+
 /** Get the value of an integer property.
  *
  *  MP4GetIntegerProperty determines the value of the integer property

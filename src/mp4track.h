@@ -71,6 +71,8 @@ public:
         return m_File;
     }
 
+    Log& GetLogger();
+
     MP4Atom& GetTrakAtom() {
         return m_trakAtom;
     }
@@ -173,7 +175,9 @@ protected:
     bool        InitEditListProperties();
 
     File*       GetSampleFile( MP4SampleId sampleId );
-    uint64_t    GetSampleFileOffset(MP4SampleId sampleId);
+public:    
+	uint64_t    GetSampleFileOffset(MP4SampleId sampleId);
+protected:
     uint32_t    GetSampleStscIndex(MP4SampleId sampleId);
     uint32_t    GetChunkStscIndex(MP4ChunkId chunkId);
     uint32_t    GetChunkSize(MP4ChunkId chunkId);

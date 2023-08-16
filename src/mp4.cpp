@@ -87,12 +87,12 @@ const char* MP4GetFilename( MP4FileHandle hFile )
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MP4FileHandle MP4Read( const char* fileName )
+MP4FileHandle MP4Read( const char* fileName, MP4LogConfig* logConfig )
 {
-    return MP4ReadProvider( fileName, NULL );
+    return MP4ReadProvider( fileName, NULL, logConfig );
 }
 
-MP4FileHandle MP4ReadProvider( const char* fileName, const MP4FileProvider* fileProvider )
+MP4FileHandle MP4ReadProvider( const char* fileName, const MP4FileProvider* fileProvider, MP4LogConfig* logConfig )
 {
     if (!fileName)
         return MP4_INVALID_FILE_HANDLE;
@@ -100,6 +100,9 @@ MP4FileHandle MP4ReadProvider( const char* fileName, const MP4FileProvider* file
     MP4File *pFile = ConstructMP4File();
     if (!pFile)
         return MP4_INVALID_FILE_HANDLE;
+
+    if (logConfig)
+        pFile->GetLogger().setConfig(logConfig);
 
     try {
         pFile->Read( fileName, fileProvider, NULL, NULL );
@@ -118,7 +121,7 @@ MP4FileHandle MP4ReadProvider( const char* fileName, const MP4FileProvider* file
     return MP4_INVALID_FILE_HANDLE;
 }
 
-MP4FileHandle MP4ReadCallbacks( const MP4IOCallbacks* callbacks, void* handle )
+MP4FileHandle MP4ReadCallbacks( const MP4IOCallbacks* callbacks, void* handle, MP4LogConfig* logConfig )
 {
     if (!callbacks)
         return MP4_INVALID_FILE_HANDLE;
@@ -126,6 +129,9 @@ MP4FileHandle MP4ReadCallbacks( const MP4IOCallbacks* callbacks, void* handle )
     MP4File *pFile = ConstructMP4File();
     if (!pFile)
         return MP4_INVALID_FILE_HANDLE;
+
+    if (logConfig)
+        pFile->GetLogger().setConfig(logConfig);
 
     try {
         pFile->Read( NULL, NULL, callbacks, handle );
@@ -636,6 +642,29 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
         }
         return false;
     }
+
+    bool MP4DeleteAtom (MP4FileHandle hFile, const char *atomName)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                MP4Atom* atom = ((MP4File *)hFile)->FindAtom(atomName);
+                if (atom)
+                {
+                    atom->GetParentAtom()->DeleteChildAtom(atom);
+                    delete atom;
+                    return true;
+                }
+            } catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
 
     bool MP4GetIntegerProperty(
         MP4FileHandle hFile, const char* propName, uint64_t *retvalue)
@@ -2861,6 +2890,57 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
         return false;
     }
 
+    /* generic track properties */
+
+    bool MP4DeleteTrackAtom (MP4FileHandle hFile,
+                           MP4TrackId trackId,
+                           const char *atomName)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                MP4Atom* track_atom = ((MP4File*)hFile)->FindTrackAtom(trackId, atomName);
+                if (track_atom)
+                {
+                    track_atom->GetParentAtom()->DeleteChildAtom(track_atom);
+                    delete track_atom;
+                    return true;
+                }
+            }
+            catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
+
+    bool MP4GetTrackAtomData (MP4FileHandle hFile, MP4TrackId trackId, const char *atomName, uint8_t ** outAtomData, uint64_t * outDataSize)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File *)hFile)->GetTrackAtomData(trackId, atomName, outAtomData, outDataSize);
+            } catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
+    MP4V2_EXPORT
+    void MP4FreeTrackAtomData(uint8_t * pAtomData)
+    {
+       if (pAtomData)
+          free(pAtomData);
+    }
+   
     bool MP4GetTrackIntegerProperty (
         MP4FileHandle hFile, MP4TrackId trackId,
         const char* propName,
@@ -3277,6 +3357,28 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
         }
         return 0;
     }
+
+    uint64_t MP4GetSampleFileOffset(
+        MP4FileHandle hFile,
+        MP4TrackId    trackId,
+        MP4SampleId   sampleId )
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                return ((MP4File*)hFile)->GetSampleFileOffset(
+                           trackId, sampleId);
+            }
+            catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return 0;
+    }
+
 
     uint32_t MP4GetTrackMaxSampleSize(
         MP4FileHandle hFile,
@@ -4697,6 +4799,354 @@ bool MP4SetTrackDurationPerChunk(
 
     return false;
 }
+    
+MP4AtomHandle MP4GetRootAtom(MP4FileHandle hFile)
+{
+    if (!MP4_IS_VALID_FILE_HANDLE(hFile)) {
+        return NULL;
+    }
+    
+    try {
+        ASSERT(hFile);
+        return ((MP4File*)hFile)->GetRootAtom();
+    } catch (Exception* x) {
+        mp4v2::impl::log.errorf(*x);
+        delete x;
+    }
+    
+    return NULL;
+}
+
+const char * MP4GetTypeOfAtom(MP4AtomHandle atom)
+{
+    if (!atom) {
+        return NULL;
+    }
+    
+    try {
+        return ((MP4Atom *)atom)->GetType();
+    } catch (Exception *x) {
+        mp4v2::impl::log.errorf(*x);
+        delete x;
+    }
+    
+    return NULL;
+}
+
+uint64_t MP4GetSizeOfAtom(MP4AtomHandle hAtom)
+{
+    if (!hAtom) {
+        return 0;
+    }
+    
+    try {
+        MP4Atom * atom = (MP4Atom *)hAtom;
+        return (atom->GetEnd() - atom->GetStart());
+    } catch (Exception *x) {
+        mp4v2::impl::log.errorf(*x);
+        delete x;
+    }
+    
+    return 0;
+}
+
+void * MP4CopyRawBytesOfAtom(MP4AtomHandle hAtom, size_t *count)
+{
+    if (!hAtom) {
+        return NULL;
+    }
+    
+    try {
+        MP4Atom *atom = (MP4Atom *)hAtom;
+        MP4File *file = &atom->GetFile();
+        
+        uint64_t pos = atom->GetStart();
+        uint64_t end = atom->GetEnd();
+        uint64_t size = end - pos;
+        
+        unsigned char *buf = (unsigned char *)malloc(size);
+        
+        file->SetPosition(pos, NULL);
+        file->ReadBytes(buf, (uint32_t)size, NULL);
+        
+        if (count) {
+            *count = size;
+        }
+        
+        return buf;
+    } catch (Exception *x) {
+        mp4v2::impl::log.errorf(*x);
+        delete x;
+    }
+    
+    if (count) {
+        *count = 0;
+    }
+    
+    return NULL;
+}
+
+uint32_t MP4GetNumberOfChildAtoms(MP4AtomHandle atom)
+{
+    if (!atom) {
+        return 0;
+    }
+    
+    try {
+        return ((MP4Atom *)atom)->GetNumberOfChildAtoms();
+    } catch (Exception *x) {
+        mp4v2::impl::log.errorf(*x);
+        delete x;
+    }
+    
+    return 0;
+}
+
+MP4AtomHandle MP4GetChildAtomAtIndex(MP4AtomHandle atom, unsigned index)
+{
+    if (!atom) {
+        return NULL;
+    }
+    
+    try {
+        return ((MP4Atom *)atom)->GetChildAtom(index);
+    } catch (Exception *x) {
+        mp4v2::impl::log.errorf(*x);
+        delete x;
+    }
+    
+    return NULL;
+}
+
+MP4AtomHandle MP4GetParentAtom(MP4AtomHandle atom)
+{
+    if (!atom) {
+        return NULL;
+    }
+    
+    try {
+        return ((MP4Atom *)atom)->GetParentAtom();
+    } catch (Exception *x) {
+        mp4v2::impl::log.errorf(*x);
+        delete x;
+    }
+    
+    return NULL;
+}
+    
+    
+uint32_t MP4GetNumberOfPropertiesOfAtom(MP4AtomHandle atom)
+{
+    if (!atom) {
+        return 0;
+    }
+    
+    try {
+        return ((MP4Atom *)atom)->GetCount();
+    } catch (Exception *x) {
+        mp4v2::impl::log.errorf(*x);
+        delete x;
+    }
+    
+    return 0;
+}
+
+
+MP4PropertyHandle MP4GetPropertyOfAtomAtIndex(MP4AtomHandle atom, unsigned index)
+{
+    if (!atom) {
+        return NULL;
+    }
+    
+    try {
+        return ((MP4Atom *)atom)->GetProperty(index);
+    } catch (Exception *x) {
+        mp4v2::impl::log.errorf(*x);
+        delete x;
+    }
+    
+    return NULL;
+}
+
+
+const char * MP4GetNameOfProperty(MP4PropertyHandle hProperty)
+{
+    if (!hProperty) {
+        return NULL;
+    }
+    
+    try {
+        MP4Property *property = (MP4Property *)hProperty;
+        return property->GetName();
+    } catch (Exception *x) {
+        mp4v2::impl::log.errorf(*x);
+        delete x;
+    }
+    
+    return NULL;
+}
+
+
+char * MP4CopyDescriptionOfProperty(MP4PropertyHandle hProperty, size_t *count)
+{
+    if (!hProperty) {
+        return NULL;
+    }
+    
+    try {
+        size_t aBufLen = 4096;
+        MP4Property *property = (MP4Property *)hProperty;
+        MP4PropertyType type = property->GetType();
+        char *buf = (char *)malloc(aBufLen);
+        memset(buf, 0, aBufLen);
+        uint32_t len = 0;
+        switch (type) {
+            case Integer8Property:
+            case Integer16Property:
+            case Integer24Property:
+            case Integer32Property:
+            case Integer64Property: {
+                MP4IntegerProperty *iProperty = (MP4IntegerProperty *)property;
+                uint32_t count = iProperty->GetCount();
+                for (uint32_t i = 0; i < count; i++) {
+                    if (i != 0) {
+                        len += snprintf(buf+len, aBufLen-len, ",");
+                    }
+                    uint64_t value = iProperty->GetValue(i);
+                    len += snprintf(buf+len, aBufLen-len, "%lld", value);
+                }
+                break;
+            }
+            case Float32Property: {
+                MP4Float32Property *fProperty = (MP4Float32Property *)property;
+                uint32_t count = fProperty->GetCount();
+                for (uint32_t i = 0; i < count; i++) {
+                    if (i != 0) {
+                        len += snprintf(buf+len, aBufLen-len, ",");
+                    }
+                    float value = fProperty->GetValue(i);
+                    len += snprintf(buf+len, aBufLen-len, "%f", value);
+                }
+                break;
+            }
+            case StringProperty: {
+                //len += snprintf(buf, aBufLen, "[StringProperty]");
+
+                MP4StringProperty *sProperty = (MP4StringProperty *)property;
+                uint32_t count = sProperty->GetCount();
+                for (uint32_t i = 0; i < count; i++) {
+                    if (i != 0) {
+                        len += snprintf(buf+len, aBufLen-len, ",");
+                    }
+                    const char *value = sProperty->GetValue(i);
+                    len += snprintf(buf+len, aBufLen-len, "%s", value);
+                }
+
+                break;
+            }
+            case BytesProperty: {
+                //len += snprintf(buf, aBufLen, "[BytesProperty]");
+
+                MP4BytesProperty *pProperty = (MP4BytesProperty *)property;
+                uint32_t count = pProperty->GetCount();
+                for (uint32_t pIndex = 0; pIndex < count; pIndex++) {
+                    if (pIndex != 0) {
+                        len += snprintf(buf+len, aBufLen-len, ", ");
+                    }
+                    
+                    uint32_t size = 0;
+                    uint8_t *bytes = pProperty->GetBytesValue(&size, pIndex);
+                    //std::cout << "[BytesProperty] size" << size << endl;
+                    if (size < 512)
+                    {
+                        len += snprintf(buf+len, aBufLen-len, "%s", bytes, size);
+
+                        //for (uint32_t bIndex = 0; bIndex < size; bIndex++) {
+                        //    if (bIndex != 0) {
+                        //        len += snprintf(buf+len, aBufLen-len, " ");
+                        //    }
+                        //    len += snprintf(buf + len, aBufLen-len, "%.2x", bytes[bIndex]);
+                        //}
+                    }
+                    else
+                    {
+                        len += snprintf(buf, aBufLen, "[BytesProperty size>256]");
+                    }
+                }
+
+                break;
+            }
+            case TableProperty: {
+                len += snprintf(buf, aBufLen, "[TableProperty]");
+                break;
+            }
+            case DescriptorProperty: {
+                len += snprintf(buf, aBufLen, "[DescriptorProperty]");
+                break;
+            }
+            case LanguageCodeProperty: {
+                len += snprintf(buf, aBufLen, "[LanguageCodeProperty]");
+                break;
+            }
+            case BasicTypeProperty: {
+                len += snprintf(buf, aBufLen, "[BasicTypeProperty]");
+                break;
+            }
+            default:
+                break;
+        }
+        
+        if (count) {
+            *count = len;
+        }
+        return buf;
+    } catch (Exception *x) {
+        mp4v2::impl::log.errorf(*x);
+        delete x;
+    }
+    
+    if (count) {
+        *count = 0;
+    }
+    
+    return NULL;
+}
+
+MP4AtomHandle MP4FindTrackAtom(MP4FileHandle hFile, uint16_t      index, const char*   name)
+{
+    if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+        try {
+            return ((MP4File*)hFile)->FindTrackAtom(index, name);
+        }
+        catch( Exception* x ) {
+            mp4v2::impl::log.errorf(*x);
+            delete x;
+        }
+        catch( ... ) {
+            mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+        }
+    }
+    return NULL;
+}
+
+MP4AtomHandle MP4FindAtom(MP4FileHandle hFile, const char*   name)
+{
+    if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+        try {
+            return ((MP4File*)hFile)->FindAtom(name);
+        }
+        catch( Exception* x ) {
+            mp4v2::impl::log.errorf(*x);
+            delete x;
+        }
+        catch( ... ) {
+            mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+        }
+    }
+    return NULL;
+}
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 

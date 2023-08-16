@@ -42,12 +42,17 @@ bool MP4Property::FindProperty(const char* name,
     }
 
     if (!strcasecmp(m_name, name)) {
-        log.verbose1f("\"%s\": FindProperty: matched %s", 
+        GetLogger().verbose1f("\"%s\": FindProperty: matched %s",
                       m_parentAtom.GetFile().GetFilename().c_str(), name);
         *ppProperty = this;
         return true;
     }
     return false;
+}
+
+Log& MP4Property::GetLogger()
+{
+    return m_parentAtom.GetFile().GetLogger();
 }
 
 // Integer Property
@@ -152,11 +157,11 @@ template<> void MP4Integer8Property::Dump(uint8_t indent,
         return;
     }
     if (index != 0)
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u] = %u (0x%02x)",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u] = %u (0x%02x)",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, index, m_values[index], m_values[index]);
     else
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %u (0x%02x)",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %u (0x%02x)",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, m_values[index], m_values[index]);
 }
@@ -168,11 +173,11 @@ template<> void MP4Integer16Property::Dump(uint8_t indent,
         return;
     }
     if (index != 0)
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u] = %u (0x%04x)",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u] = %u (0x%04x)",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, index, m_values[index], m_values[index]);
     else
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %u (0x%04x)",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %u (0x%04x)",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, m_values[index], m_values[index]);
 }
@@ -184,11 +189,11 @@ template<> void MP4Integer24Property::Dump(uint8_t indent,
         return;
     }
     if (index != 0)
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u] = %u (0x%06x)",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u] = %u (0x%06x)",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, index, m_values[index], m_values[index]);
     else
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %u (0x%06x)",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %u (0x%06x)",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, m_values[index], m_values[index]);
 }
@@ -200,11 +205,11 @@ template<> void MP4Integer32Property::Dump(uint8_t indent,
         return;
     }
     if (index != 0)
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u] = %u (0x%08x)",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u] = %u (0x%08x)",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, index, m_values[index], m_values[index]);
     else
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %u (0x%08x)",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %u (0x%08x)",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, m_values[index], m_values[index]);
 }
@@ -216,11 +221,11 @@ template<> void MP4Integer64Property::Dump(uint8_t indent,
         return;
     }
     if (index != 0)
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u] = %" PRIu64 " (0x%016" PRIx64 ")",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u] = %" PRIu64 " (0x%016" PRIx64 ")",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, index, m_values[index], m_values[index]);
     else
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %" PRIu64 " (0x%016" PRIx64 ")",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %" PRIu64 " (0x%016" PRIx64 ")",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, m_values[index], m_values[index]);
 }
@@ -254,12 +259,12 @@ void MP4BitfieldProperty::Dump(uint8_t indent,
         hexWidth++;
     }
     if (index != 0)
-        log.dump(indent, MP4_LOG_VERBOSE1,
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1,
                  "\"%s\": %s[%u] = %" PRIu64 " (0x%0*" PRIx64 ") <%u bits>",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, index, m_values[index], (int)hexWidth, m_values[index], m_numBits);
     else
-        log.dump(indent, MP4_LOG_VERBOSE1,
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1,
                  "\"%s\": %s = %" PRIu64 " (0x%0*" PRIx64 ") <%u bits>",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, m_values[index], (int)hexWidth, m_values[index], m_numBits);
@@ -302,11 +307,11 @@ void MP4Float32Property::Dump(uint8_t indent,
         return;
     }
     if (index != 0)
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u] = %f",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u] = %f",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, index, m_values[index]);
     else
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %f",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %f",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, m_values[index]);
 }
@@ -338,11 +343,11 @@ void MP4Float64Property::Dump(uint8_t indent,
         return;
     }
     if (index != 0)
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u] = %f",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u] = %f",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, index, m_values[index]);
     else
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %f",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %f",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, m_values[index]);
 }
@@ -490,19 +495,19 @@ void MP4StringProperty::Dump( uint8_t indent, bool dumpImplicits, uint32_t index
             indexd[0] = '\0';
 
         if( m_useUnicode )
-            log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s%s = %ls",
+            GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s%s = %ls",
                      m_parentAtom.GetFile().GetFilename().c_str(),
                      m_name, indexd, (wchar_t*)m_values[index] );
         else
-            log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s%s = %s",
+            GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s%s = %s",
                      m_parentAtom.GetFile().GetFilename().c_str(),
                      m_name, indexd, m_values[index] );
     }
-    else if( log.verbosity >= MP4_LOG_VERBOSE2 )
+    else if( GetLogger().verbosity >= MP4_LOG_VERBOSE2 )
     {
         const uint32_t max = GetCount();
 
-        log.dump(indent, MP4_LOG_VERBOSE2, "\"%s\": %s (size=%u)",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE2, "\"%s\": %s (size=%u)",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, max );
 
@@ -510,17 +515,17 @@ void MP4StringProperty::Dump( uint8_t indent, bool dumpImplicits, uint32_t index
             char*& value = m_values[i];
 
             if( m_useUnicode )
-                log.dump(indent, MP4_LOG_VERBOSE2, "\"%s\": %s[%u] = %ls",
+                GetLogger().dump(indent, MP4_LOG_VERBOSE2, "\"%s\": %s[%u] = %ls",
                          m_parentAtom.GetFile().GetFilename().c_str(),
                          m_name, i, (wchar_t*)value );
             else
-                log.dump(indent, MP4_LOG_VERBOSE2, "\"%s\": %s[%u] = %s",
+                GetLogger().dump(indent, MP4_LOG_VERBOSE2, "\"%s\": %s[%u] = %s",
                          m_parentAtom.GetFile().GetFilename().c_str(),
                          m_name, i, value );
         }
     }
     else {
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": <table entries suppressed>",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": <table entries suppressed>",
                  m_parentAtom.GetFile().GetFilename().c_str() );
     }
 }
@@ -645,7 +650,7 @@ void MP4BytesProperty::Dump(uint8_t indent,
     const uint8_t* const value = m_values[index];
 
     if( size == 0 ) {
-        log.dump(indent, MP4_LOG_VERBOSE2, "\"%s\": %s = <%u bytes>",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE2, "\"%s\": %s = <%u bytes>",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, size );
         return;
@@ -665,7 +670,7 @@ void MP4BytesProperty::Dump(uint8_t indent,
 
         oss << "  |" << text.str() << "|";
 
-        log.dump(indent, MP4_LOG_VERBOSE2, "\"%s\": %s = <%u bytes>%s",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE2, "\"%s\": %s = <%u bytes>%s",
                  m_parentAtom.GetFile().GetFilename().c_str(),
                  m_name, size, oss.str().c_str() );
         return;
@@ -686,7 +691,7 @@ void MP4BytesProperty::Dump(uint8_t indent,
     bool supressed;
 
     if( showall ||
-        size < 128 || log.verbosity >= MP4_LOG_VERBOSE2 )
+        size < 128 || GetLogger().verbosity >= MP4_LOG_VERBOSE2 )
     {
         adjsize = size;
         supressed = false;
@@ -696,15 +701,15 @@ void MP4BytesProperty::Dump(uint8_t indent,
         supressed = true;
     }
 
-    log.dump(indent, MP4_LOG_VERBOSE2, "\"%s\": %s = <%u bytes>",
+    GetLogger().dump(indent, MP4_LOG_VERBOSE2, "\"%s\": %s = <%u bytes>",
              m_parentAtom.GetFile().GetFilename().c_str(),
              m_name, size );
-    log.hexDump(indent, MP4_LOG_VERBOSE2, value, adjsize, "\"%s\": %s",
+    GetLogger().hexDump(indent, MP4_LOG_VERBOSE2, value, adjsize, "\"%s\": %s",
                 m_parentAtom.GetFile().GetFilename().c_str(),
                 m_name);
 
     if( supressed ) {
-        log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": <remaining bytes supressed>",
+        GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": <remaining bytes supressed>",
                  m_parentAtom.GetFile().GetFilename().c_str() );
     }
 }
@@ -756,7 +761,7 @@ bool MP4TableProperty::FindProperty(const char *name,
         }
     }
     
-    log.verbose1f("\"%s\": FindProperty: matched %s", 
+    GetLogger().verbose1f("\"%s\": FindProperty: matched %s",
                   m_parentAtom.GetFile().GetFilename().c_str(), name);
 
     // get name of table property
@@ -838,7 +843,7 @@ void MP4TableProperty::Write(MP4File& file, uint32_t index)
     uint32_t numEntries = GetCount();
 
     if (m_pProperties[0]->GetCount() != numEntries) {
-        log.errorf("%s: \"%s\": %s %s \"%s\"table entries %u doesn't match count %u",
+        GetLogger().errorf("%s: \"%s\": %s %s \"%s\"table entries %u doesn't match count %u",
                    __FUNCTION__, m_parentAtom.GetFile().GetFilename().c_str(),
                    GetParentAtom().GetType(),
                    GetName(), m_pProperties[0]->GetName(),
@@ -955,7 +960,7 @@ bool MP4DescriptorProperty::FindProperty(const char *name,
         return false;
     }
 
-    log.verbose1f("\"%s\": matched %s",
+    GetLogger().verbose1f("\"%s\": matched %s",
                   m_parentAtom.GetFile().GetFilename().c_str(),
                   name);
 
@@ -1031,10 +1036,10 @@ void MP4DescriptorProperty::Read(MP4File& file, uint32_t index)
 
     // warnings
     if (m_mandatory && m_pDescriptors.Size() == 0) {
-        log.warningf("%s: \"%s\": Mandatory descriptor 0x%02x missing",
+        GetLogger().warningf("%s: \"%s\": Mandatory descriptor 0x%02x missing",
                      __FUNCTION__, GetParentAtom().GetFile().GetFilename().c_str(), m_tagsStart);
     } else if (m_onlyOne && m_pDescriptors.Size() > 1) {
-        log.warningf("%s: \"%s\": Descriptor 0x%02x has more than one instance",
+        GetLogger().warningf("%s: \"%s\": Descriptor 0x%02x has more than one instance",
                      __FUNCTION__, GetParentAtom().GetFile().GetFilename().c_str(), m_tagsStart);
     }
 }
@@ -1063,11 +1068,11 @@ void MP4DescriptorProperty::Dump(uint8_t indent,
 
     if (m_name) {
         if (index != 0)
-            log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u]",
+            GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s[%u]",
                      m_parentAtom.GetFile().GetFilename().c_str(),
                      m_name, index);
         else
-            log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s",
+            GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s",
                      m_parentAtom.GetFile().GetFilename().c_str(),
                      m_name);
         indent++;
@@ -1105,7 +1110,7 @@ MP4LanguageCodeProperty::Dump( uint8_t indent, bool dumpImplicits, uint32_t inde
              | (((svalue[2] - 0x60) & 0x001f)      );
     }
 
-    log.dump(indent, MP4_LOG_VERBOSE2, "\"%s\": %s = %s (0x%04x)",
+    GetLogger().dump(indent, MP4_LOG_VERBOSE2, "\"%s\": %s = %s (0x%04x)",
              m_parentAtom.GetFile().GetFilename().c_str(),
              m_name, bmff::enumLanguageCode.toString( _value, true ).c_str(), data );
 }
@@ -1180,7 +1185,7 @@ MP4BasicTypeProperty::MP4BasicTypeProperty( MP4Atom& parentAtom, const char* nam
 void
 MP4BasicTypeProperty::Dump( uint8_t indent, bool dumpImplicits, uint32_t index )
 {
-    log.dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %s (0x%02x)",
+    GetLogger().dump(indent, MP4_LOG_VERBOSE1, "\"%s\": %s = %s (0x%02x)",
              m_parentAtom.GetFile().GetFilename().c_str(), m_name,
              itmf::enumBasicType.toString( _value, true ).c_str(), _value );
 }

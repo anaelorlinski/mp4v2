@@ -60,9 +60,17 @@ typedef enum {
 /*****************************************************************************/
 
 typedef void (*MP4LogCallback)(
+    // AO : add target PTR for log object
+	void* ptr,
     MP4LogLevel loglevel,
     const char* fmt,
     va_list     ap );
+
+typedef struct MP4LogConfig_s {
+    MP4LogCallback _func;
+    void*          _target;
+    MP4LogLevel    _verbosity;
+} MP4LogConfig;
 
 /*****************************************************************************/
 

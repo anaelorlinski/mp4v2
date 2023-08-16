@@ -204,7 +204,7 @@ void MP4Container::Write(MP4File& file)
     uint32_t numProperties = m_pProperties.Size();
 
     if (numProperties == 0) {
-        WARNING(numProperties == 0);
+        WARNING_TARGET(file.GetLogger(), numProperties == 0);
         return;
     }
 

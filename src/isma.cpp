@@ -56,7 +56,7 @@ void MP4File::MakeIsmaCompliant(bool addIsmaComplianceSdp)
         audioTrackId = FindTrackId(0, MP4_AUDIO_TRACK_TYPE);
     }
     catch ( Exception *x ) {
-        log.errorf(*x);
+        m_logger.errorf(*x);
         delete x;
     }
     MP4TrackId videoTrackId = MP4_INVALID_TRACK_ID;
@@ -64,7 +64,7 @@ void MP4File::MakeIsmaCompliant(bool addIsmaComplianceSdp)
         videoTrackId = FindTrackId(0, MP4_VIDEO_TRACK_TYPE);
     }
     catch (Exception* x) {
-        log.errorf(*x);
+        m_logger.errorf(*x);
         delete x;
     }
     if (audioTrackId == MP4_INVALID_TRACK_ID &&
@@ -76,7 +76,7 @@ void MP4File::MakeIsmaCompliant(bool addIsmaComplianceSdp)
         audio_media_data_name = MP4GetTrackMediaDataName(this, audioTrackId);
         if (!(ATOMID(audio_media_data_name) == ATOMID("mp4a") ||
                 ATOMID(audio_media_data_name) == ATOMID("enca"))) {
-            log.errorf("%s: \"%s\": can't make ISMA compliant when file contains an %s track", 
+            m_logger.errorf("%s: \"%s\": can't make ISMA compliant when file contains an %s track",
                        __FUNCTION__, GetFilename().c_str(), audio_media_data_name);
             return;
         }
@@ -87,14 +87,14 @@ void MP4File::MakeIsmaCompliant(bool addIsmaComplianceSdp)
         video_media_data_name = MP4GetTrackMediaDataName(this, videoTrackId);
         if (!(ATOMID(video_media_data_name) == ATOMID("mp4v") ||
                 ATOMID(video_media_data_name) == ATOMID("encv"))) {
-            log.errorf("%s: \"%s\": can't make ISMA compliant when file contains an %s track", __FUNCTION__, 
+            m_logger.errorf("%s: \"%s\": can't make ISMA compliant when file contains an %s track", __FUNCTION__,
                        GetFilename().c_str(), video_media_data_name);
             return;
         }
-        MP4LogLevel verb = log.verbosity;
-        log.setVerbosity(MP4_LOG_NONE);
+        MP4LogLevel verb = m_logger.verbosity;
+        m_logger.setVerbosity(MP4_LOG_NONE);
         videoProfile = MP4GetVideoProfileLevel(this, videoTrackId);
-        log.setVerbosity(verb);
+        m_logger.setVerbosity(verb);
     }
 
     m_useIsma = true;
@@ -129,7 +129,7 @@ void MP4File::MakeIsmaCompliant(bool addIsmaComplianceSdp)
         sceneTrackId = FindTrackId(0, MP4_SCENE_TRACK_TYPE);
     }
     catch (Exception *x) {
-        log.errorf(*x);
+        m_logger.errorf(*x);
         delete x;
     }
     if (sceneTrackId != MP4_INVALID_TRACK_ID) {
@@ -202,7 +202,7 @@ void MP4File::MakeIsmaCompliant(bool addIsmaComplianceSdp)
 
     SetSessionSdp(sdpBuf);
 
-    log.verbose1f("\"%s\": IOD SDP = %s", GetFilename().c_str(), sdpBuf);
+    m_logger.verbose1f("\"%s\": IOD SDP = %s", GetFilename().c_str(), sdpBuf);
 
     MP4Free(iodBase64);
     iodBase64 = NULL;
@@ -281,7 +281,7 @@ void MP4File::CreateIsmaIodFromFile(
         &pBytes,
         &numBytes);
 
-    log.hexDump(0, MP4_LOG_VERBOSE1, pBytes, numBytes, "\"%s\": OD data",
+    m_logger.hexDump(0, MP4_LOG_VERBOSE1, pBytes, numBytes, "\"%s\": OD data",
                 GetFilename().c_str() );
 
     char* odCmdBase64 = MP4ToBase64(pBytes, numBytes);
@@ -298,7 +298,7 @@ void MP4File::CreateIsmaIodFromFile(
                              (MP4Property**)&pUrlProperty))
         pUrlProperty->SetValue(urlBuf);
 
-    log.verbose1f("\"%s\": OD data URL = \042%s\042", GetFilename().c_str(),
+    m_logger.verbose1f("\"%s\": OD data URL = \042%s\042", GetFilename().c_str(),
                   urlBuf);
 
     MP4Free(odCmdBase64);
@@ -354,7 +354,7 @@ void MP4File::CreateIsmaIodFromFile(
         &pBytes,
         &numBytes);
 
-    log.hexDump(0, MP4_LOG_VERBOSE1, pBytes, numBytes, "\"%s\": Scene data",
+    m_logger.hexDump(0, MP4_LOG_VERBOSE1, pBytes, numBytes, "\"%s\": Scene data",
                 GetFilename().c_str() );
 
     char *sceneCmdBase64 = MP4ToBase64(pBytes, numBytes);
@@ -368,7 +368,7 @@ void MP4File::CreateIsmaIodFromFile(
                                 (MP4Property**)&pUrlProperty))
         pUrlProperty->SetValue(urlBuf);
 
-    log.verbose1f("\"%s\": Scene data URL = \042%s\042",
+    m_logger.verbose1f("\"%s\": Scene data URL = \042%s\042",
                   GetFilename().c_str(), urlBuf);
 
     MP4Free(sceneCmdBase64);
@@ -413,7 +413,7 @@ void MP4File::CreateIsmaIodFromFile(
 
     delete pIod;
 
-    log.hexDump(0, MP4_LOG_VERBOSE1, *ppBytes, *pNumBytes, "\"%s\": IOD data",
+    m_logger.hexDump(0, MP4_LOG_VERBOSE1, *ppBytes, *pNumBytes, "\"%s\": IOD data",
                 GetFilename().c_str() );
 }
 
@@ -467,7 +467,7 @@ void MP4File::CreateIsmaIodFromParams(
         &pBytes,
         &numBytes);
 
-    log.hexDump(0, MP4_LOG_VERBOSE1, pBytes, numBytes, "\"%s\": Scene data",
+    m_logger.hexDump(0, MP4_LOG_VERBOSE1, pBytes, numBytes, "\"%s\": Scene data",
                 GetFilename().c_str() );
 
     char* sceneCmdBase64 = MP4ToBase64(pBytes, numBytes);
@@ -478,7 +478,7 @@ void MP4File::CreateIsmaIodFromParams(
              "data:application/mpeg4-bifs-au;base64,%s",
              sceneCmdBase64);
 
-    log.verbose1f("\"%s\": Scene data URL = \042%s\042", GetFilename().c_str(),
+    m_logger.verbose1f("\"%s\": Scene data URL = \042%s\042", GetFilename().c_str(),
                   urlBuf);
 
     /* MP4Descriptor* pSceneEsd = */
@@ -546,7 +546,7 @@ void MP4File::CreateIsmaIodFromParams(
     delete pAudioEsdProperty;
     delete pVideoEsdProperty;
 
-    log.hexDump(0, MP4_LOG_VERBOSE1,pBytes, numBytes,"\"%s\": OD data = %" PRIu64 " bytes",
+    m_logger.hexDump(0, MP4_LOG_VERBOSE1,pBytes, numBytes,"\"%s\": OD data = %" PRIu64 " bytes",
                 GetFilename().c_str(), numBytes);
 
     char* odCmdBase64 = MP4ToBase64(pBytes, numBytes);
@@ -557,7 +557,7 @@ void MP4File::CreateIsmaIodFromParams(
                  "data:application/mpeg4-od-au;base64,%s",
                  odCmdBase64);
 
-        log.verbose1f("\"%s\": OD data URL = \042%s\042", GetFilename().c_str(), urlBuf);
+        m_logger.verbose1f("\"%s\": OD data URL = \042%s\042", GetFilename().c_str(), urlBuf);
 
         /* MP4Descriptor* pOdEsd = */
         CreateESD(
@@ -584,7 +584,7 @@ void MP4File::CreateIsmaIodFromParams(
 
     delete pIod;
 
-    log.hexDump(0, MP4_LOG_VERBOSE1, *ppIodBytes, *pIodNumBytes,"\"%s\": IOD data",
+    m_logger.hexDump(0, MP4_LOG_VERBOSE1, *ppIodBytes, *pIodNumBytes,"\"%s\": IOD data",
                 GetFilename().c_str() );
 }
 
@@ -818,7 +818,7 @@ void MP4File::CreateIsmaODUpdateCommandFromFileForStream(
 
     CreateIsmaODUpdateCommandForStream(
         pAudioEsd, pVideoEsd, ppBytes, pNumBytes);
-    log.hexDump(0, MP4_LOG_VERBOSE1, *ppBytes, *pNumBytes,
+    m_logger.hexDump(0, MP4_LOG_VERBOSE1, *ppBytes, *pNumBytes,
                 "\"%s\": After CreateImsaODUpdateCommandForStream len %" PRIu64,
                 GetFilename().c_str(), *pNumBytes);
 

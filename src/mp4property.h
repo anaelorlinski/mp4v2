@@ -93,6 +93,8 @@ public:
     virtual bool FindProperty(const char* name,
                               MP4Property** ppProperty, uint32_t* pIndex = NULL);
 
+    Log& GetLogger();
+
 protected:
     MP4Atom& m_parentAtom;
     const char* m_name;
@@ -479,6 +481,13 @@ public:
         *ppValue = (uint8_t*)MP4Malloc(m_valueSizes[index]);
         memcpy(*ppValue, m_values[index], m_valueSizes[index]);
         *pValueSize = m_valueSizes[index];
+    }
+    
+    uint8_t* GetBytesValue(uint32_t *size, uint32_t index = 0) {
+        if (size) {
+            *size = m_valueSizes[index];
+        }
+        return m_values[index];
     }
 
     char* GetValueStringAlloc( uint32_t index = 0 ) {

@@ -27,8 +27,6 @@
 
 namespace mp4v2 { namespace impl {
 
-MP4LogCallback Log::_cb_func = NULL;
-
 // There's no mechanism to set the log level at runtime at
 // the moment so construct this so it only logs important
 // stuff.
@@ -66,6 +64,16 @@ Log::setLogCallback( MP4LogCallback value )
 {
     Log::_cb_func = value;
 }
+
+void Log::setConfig( MP4LogConfig* config )
+{
+    if (!config)
+        return;
+    _verbosity = config->_verbosity;
+    _cb_func = config->_func;
+    _cb_target = config->_target;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -288,11 +296,11 @@ Log::vdump( uint8_t     indent,
             // new_format << setw(indent) << setfill(' ') << "" << setw(0);
             // new_format << format;
             new_format << indent_str << format;
-            Log::_cb_func(verbosity_,new_format.str().c_str(),ap);
+            Log::_cb_func(_cb_target, verbosity_,new_format.str().c_str(),ap);
             return;
         }
 
-        Log::_cb_func(verbosity_,format,ap);
+        Log::_cb_func(_cb_target, verbosity_,format,ap);
         return;
     }
 
@@ -361,7 +369,7 @@ Log::vprintf( MP4LogLevel       verbosity_,
 
     if (Log::_cb_func)
     {
-        Log::_cb_func(verbosity_,format,ap);
+        Log::_cb_func(_cb_target, verbosity_,format,ap);
         return;
     }
 
@@ -507,7 +515,7 @@ using namespace mp4v2::impl;
 extern "C"
 void MP4SetLogCallback( MP4LogCallback cb_func )
 {
-    Log::setLogCallback(cb_func);
+    mp4v2::impl::log.setLogCallback(cb_func);
 }
 
 extern "C"

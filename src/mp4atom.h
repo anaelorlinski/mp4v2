@@ -46,7 +46,7 @@ typedef MP4Array<MP4Atom*> MP4AtomArray;
 class MP4AtomInfo {
 public:
     MP4AtomInfo() {
-        m_name = NULL;
+        m_name = nullptr;
         m_mandatory = Optional;
         m_onlyOne = OnlyOne;
         m_count = 0;
@@ -197,6 +197,10 @@ public:
     virtual void Dump(uint8_t indent, bool dumpImplicits);
 
     bool GetLargesizeMode();
+
+    Log& GetLogger() {
+        return m_File.GetLogger();
+    }
 
 protected:
     void AddProperty(MP4Property* pProperty);
