@@ -10,10 +10,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // mingw needs this to enable some newer 64-bit functions
-#ifdef __MINGW32__
-#   undef  __MSVCRT_VERSION__
-#   define __MSVCRT_VERSION__ 0x800
-#endif
+// AO : this is not good with UCRT
+//#ifdef __MINGW32__
+//#   undef  __MSVCRT_VERSION__
+//#   define __MSVCRT_VERSION__ 0x800
+//#endif
 
 // set minimum win32 API requirement to Windows 2000 or higher
 #ifndef WINVER
