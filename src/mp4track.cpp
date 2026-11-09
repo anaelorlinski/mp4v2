@@ -234,6 +234,9 @@ MP4Track::MP4Track(MP4File& file, MP4Atom& trakAtom)
     // edit list
     (void)InitEditListProperties();
 
+    // roll sample group
+    (void)InitRollProperties();
+
     // was everything found?
     if (!success) {
         throw new EXCEPTION("invalid track");
@@ -580,6 +583,96 @@ void MP4Track::FinishWrite(uint32_t options)
             }
         }
     }
+
+    // write the 'roll' sample group
+    if (m_writeRoll) {
+        FinishSgpd();
+    }
+}
+
+// 'roll' sample group (ISO/IEC 14496-12 10.1), ported from the SublerApp/mp4v2
+// fork. One sgpd entry (version 1, default_length 2) with roll_distance -1
+// (one preceding access unit is needed to decode a sample, as for AAC), and one
+// sbgp entry mapping every sample of the track to it. Must run after the last
+// sample is written. An existing 'roll' group that already has entries is left
+// as is; sgpd / sbgp of other grouping types are never touched.
+static const uint32_t kRollGroupingType = 0x726f6c6c; // 'roll'
+static const uint16_t kRollDistanceMinusOne = 0xFFFF; // int16 -1
+
+static MP4Atom* FindGroupAtom(MP4Atom* stbl, const char* type)
+{
+    for (uint32_t i = 0; i < stbl->GetNumberOfChildAtoms(); i++) {
+        MP4Atom* child = stbl->GetChildAtom(i);
+        if (strcmp(child->GetType(), type))
+            continue;
+        MP4Integer32Property* pGroupingType = NULL;
+        string name = string(type) + ".groupingType";
+        if (child->FindProperty(name.c_str(), (MP4Property**)&pGroupingType)
+                && pGroupingType->GetValue() == kRollGroupingType) {
+            return child;
+        }
+    }
+    return NULL;
+}
+
+void MP4Track::FinishSgpd()
+{
+    MP4Atom* stbl = m_trakAtom.FindAtom( "trak.mdia.minf.stbl" );
+    if (!stbl)
+        return;
+
+    MP4Atom* sgpd = FindGroupAtom(stbl, "sgpd");
+    MP4Atom* sbgp = FindGroupAtom(stbl, "sbgp");
+
+    if( !sgpd )
+        sgpd = AddAtom( "trak.mdia.minf.stbl", "sgpd" );
+    if( !sbgp )
+        sbgp = AddAtom( "trak.mdia.minf.stbl", "sbgp" );
+
+    MP4Integer32Property* pGroupingType = NULL;
+    if (sgpd->FindProperty("sgpd.groupingType", (MP4Property**)&pGroupingType))
+        pGroupingType->SetValue(kRollGroupingType);
+    if (sbgp->FindProperty("sbgp.groupingType", (MP4Property**)&pGroupingType))
+        pGroupingType->SetValue(kRollGroupingType);
+
+    MP4Integer32Property* pSgpdCount = NULL;
+    MP4Integer16Property* pRollDistance = NULL;
+    if (sgpd->FindProperty("sgpd.entryCount", (MP4Property**)&pSgpdCount)
+            && sgpd->FindProperty("sgpd.entries.groupingType", (MP4Property**)&pRollDistance)
+            && pRollDistance->GetType() == Integer16Property
+            && pSgpdCount->GetValue() == 0) {
+        pRollDistance->AddValue(kRollDistanceMinusOne);
+        pSgpdCount->IncrementValue();
+    }
+
+    MP4Integer32Property* pSbgpCount = NULL;
+    MP4Integer32Property* pSampleCount = NULL;
+    MP4Integer32Property* pDescriptionIndex = NULL;
+    if (sbgp->FindProperty("sbgp.entryCount", (MP4Property**)&pSbgpCount)
+            && sbgp->FindProperty("sbgp.entries.sampleCount", (MP4Property**)&pSampleCount)
+            && sbgp->FindProperty("sbgp.entries.groupDescriptionIndex", (MP4Property**)&pDescriptionIndex)
+            && pSbgpCount->GetValue() == 0) {
+        pSampleCount->AddValue(GetNumberOfSamples());
+        pDescriptionIndex->AddValue(1);
+        pSbgpCount->IncrementValue();
+    }
+}
+
+void MP4Track::SetWantsRoll(bool wantsRoll)
+{
+    m_writeRoll = wantsRoll;
+}
+
+// a track read from a file that has a 'roll' group keeps it on rewrite
+bool MP4Track::InitRollProperties()
+{
+    m_writeRoll = false;
+
+    MP4Atom* stbl = m_trakAtom.FindAtom( "trak.mdia.minf.stbl" );
+    if (stbl && FindGroupAtom(stbl, "sgpd") && FindGroupAtom(stbl, "sbgp")) {
+        m_writeRoll = true;
+    }
+    return m_writeRoll;
 }
 
 // Process sdtp log and add sdtp atom.

@@ -3308,6 +3308,11 @@ void MP4File::SetTrackBytesProperty(MP4TrackId trackId, const char* name,
     SetBytesProperty(MakeTrackName(trackId, name), pValue, valueSize);
 }
 
+void MP4File::SetWantsRoll(MP4TrackId trackId, bool wantsRoll)
+{
+    m_pTracks[FindTrackIndex(trackId)]->SetWantsRoll(wantsRoll);
+}
+
 bool MP4File::GetTrackLanguage( MP4TrackId trackId, char* code )
 {
     ostringstream oss;

@@ -171,8 +171,11 @@ public:
     MP4Duration GetDurationPerChunk();
     void        SetDurationPerChunk( MP4Duration );
 
+    void SetWantsRoll(bool wantsRoll);
+
 protected:
     bool        InitEditListProperties();
+    bool        InitRollProperties();
 
     File*       GetSampleFile( MP4SampleId sampleId );
 public:    
@@ -208,6 +211,7 @@ protected:
 
     void CalculateBytesPerSample();
 
+    void FinishSgpd();
     void FinishSdtp();
 
 protected:
@@ -298,6 +302,9 @@ protected:
     uint32_t    m_cachedSfoSampleOffset;
 
     string m_sdtpLog; // records frame types for H264 samples
+
+    // 'roll' sample group (sgpd + sbgp), written in FinishWrite
+    bool m_writeRoll;
 };
 
 typedef MP4Array<MP4Track*> MP4TrackArray;

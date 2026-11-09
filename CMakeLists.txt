@@ -247,7 +247,9 @@ set(MP4V2_SOURCE_FILES
         src/atom_rtp.cpp
         src/atom_s263.cpp
         src/atom_sdp.cpp
+        src/atom_sbgp.cpp
         src/atom_sdtp.cpp
+        src/atom_sgpd.cpp
         src/atom_smi.cpp
         src/atom_sound.cpp
         src/atom_standard.cpp

@@ -816,6 +816,27 @@ bool MP4SetTrackBytesProperty(
     const uint8_t* pValue,
     uint32_t       valueSize);
 
+/** Request a 'roll' sample group for a track.
+ *
+ *  When set, an sgpd box (grouping type 'roll', version 1, one entry with
+ *  roll_distance -1) and an sbgp box mapping every sample of the track to that
+ *  entry are written into the track's stbl when the file is closed. This is
+ *  what AAC audio needs, and what makes AudioToolbox honour the edit list.
+ *  Same API as the SublerApp/mp4v2 fork.
+ *
+ *  @param hFile handle of file for operation.
+ *  @param trackId id of track for operation.
+ *  @param wantsRoll true to write the roll sample group.
+ *
+ *  @return true (1) on success, false (0) otherwise.
+ */
+#define MP4V2_HAS_TRACK_WANTS_ROLL 1
+MP4V2_EXPORT
+bool MP4SetTrackWantsRoll(
+    MP4FileHandle  hFile,
+    MP4TrackId     trackId,
+    bool           wantsRoll);
+
 /** @} ***********************************************************************/
 
 #endif /* MP4V2_TRACK_PROP_H */

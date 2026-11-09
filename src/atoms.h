@@ -481,6 +481,34 @@ private:
     MP4SdpAtom &operator= ( const MP4SdpAtom &src );
 };
 
+// sbgp - Sample To Group Atom (ported from the SublerApp/mp4v2 fork).
+class MP4SbgpAtom : public MP4Atom {
+public:
+    MP4SbgpAtom(MP4File &file);
+    void Generate();
+    void Read();
+protected:
+    void AddProperties(uint8_t version);
+private:
+    MP4SbgpAtom();
+    MP4SbgpAtom( const MP4SbgpAtom &src );
+    MP4SbgpAtom &operator= ( const MP4SbgpAtom &src );
+};
+
+// sgpd - Sample Group Description Atom (ported from the SublerApp/mp4v2 fork).
+class MP4SgpdAtom : public MP4Atom {
+public:
+    MP4SgpdAtom(MP4File &file);
+    void Generate();
+    void Read();
+protected:
+    void AddTableProperties(uint32_t defaultLength);
+private:
+    MP4SgpdAtom();
+    MP4SgpdAtom( const MP4SgpdAtom &src );
+    MP4SgpdAtom &operator= ( const MP4SgpdAtom &src );
+};
+
 // sdtp - Independent and Disposable Samples Atom.
 class MP4SdtpAtom : public MP4FullAtom {
 public:

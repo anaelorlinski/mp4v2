@@ -3110,6 +3110,26 @@ MP4FileHandle MP4ModifyCallbacks(const MP4IOCallbacks* callbacks,
         return false;
     }
 
+    bool MP4SetTrackWantsRoll(
+        MP4FileHandle hFile, MP4TrackId trackId,
+        bool wantsRoll)
+    {
+        if (MP4_IS_VALID_FILE_HANDLE(hFile)) {
+            try {
+                ((MP4File*)hFile)->SetWantsRoll(trackId, wantsRoll);
+                return true;
+            }
+            catch( Exception* x ) {
+                mp4v2::impl::log.errorf(*x);
+                delete x;
+            }
+            catch( ... ) {
+                mp4v2::impl::log.errorf( "%s: failed", __FUNCTION__ );
+            }
+        }
+        return false;
+    }
+
     /* sample operations */
 
     bool MP4ReadSample(

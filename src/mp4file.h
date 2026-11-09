@@ -192,6 +192,8 @@ public:
         MP4TrackId trackId, const char* name,
         const uint8_t* pValue, uint32_t valueSize);
 
+    void SetWantsRoll(MP4TrackId trackId, bool wantsRoll);
+
     bool GetTrackLanguage( MP4TrackId, char* );
     bool SetTrackLanguage( MP4TrackId, const char* );
     bool GetTrackName( MP4TrackId trackId, char** name );
